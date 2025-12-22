@@ -46,6 +46,15 @@ class VideoFilters:
         self.grid_opacity = 0.15     # 15% прозрачности
         self.grid_width = 21         # Ширина ячейки
         self.grid_height = 46        # Высота ячейки
+               self.zoom = 0.0      # % зума (0-10)
+        self.rotate = 0.0    # градусы (-5 до 5)
+        self.speed = 1.0     # коэффициент скорости (0.9 до 1.1)
+
+       def reset_all(self):
+        # ... (сброс старых) ...
+        self.zoom = 0.0
+        self.rotate = 0.0
+        self.speed = 1.0
     
     def adjust_brightness(self, percent):
         """
@@ -126,9 +135,8 @@ class VideoFilters:
         """Получить шум в процентах"""
         return int(self.noise.value)
     
-    def to_dict(self):
-        """Сериализация в словарь для хранения"""
-        return {
+  def to_dict(self):
+        d = {
             'brightness': self.brightness.value,
             'contrast': self.contrast.value,
             'sharpness': self.sharpness.value,
@@ -137,52 +145,61 @@ class VideoFilters:
             'grid_color': self.grid_color,
             'grid_opacity': self.grid_opacity,
             'grid_width': self.grid_width,
-            'grid_height': self.grid_height
+            'grid_height': self.grid_height,
+            # Новое
+            'zoom': self.zoom,
+            'rotate': self.rotate,
+            'speed': self.speed
         }
+        return d
     
-    @classmethod
+      @classmethod
     def from_dict(cls, data):
-        """Десериализация из словаря"""
-        filters = cls()
-        filters.brightness.value = data.get('brightness', 0.0)
-        filters.contrast.value = data.get('contrast', 1.0)
-        filters.sharpness.value = data.get('sharpness', 0.0)
-        filters.noise.value = data.get('noise', 0)
-        filters.grid_enabled = data.get('grid_enabled', False)
-        filters.grid_color = data.get('grid_color', '#030303')
-        filters.grid_opacity = data.get('grid_opacity', 0.15)
-        filters.grid_width = data.get('grid_width', 21)
-        filters.grid_height = data.get('grid_height', 46)
-        return filters
-    
-   def build_ffmpeg_filter(self):
-        """
-        Построить строку фильтра для FFmpeg.
-        """
+        f = cls()
+        f.brightness.value = data.get('brightness', 0.0)
+        f.contrast.value = data.get('contrast', 1.0)
+        f.sharpness.value = data.get('sharpness', 0.0)
+        f.noise.value = data.get('noise', 0)
+        f.grid_enabled = data.get('grid_enabled', False)
+        # ... остальные старые ...
+        f.zoom = data.get('zoom', 0.0)
+        f.rotate = data.get('rotate', 0.0)
+        f.speed = data.get('speed', 1.0)
+        return f
+
+    def build_ffmpeg_filter(self):
         filters = []
         
-        # Яркость и контраст
+        # 1. Зум (Scale + Crop) - применяется первым
+        if self.zoom > 0:
+            z = 1 + (self.zoom / 100)
+            filters.append(f"scale=iw*{z}:-1,crop=iw/{z}:ih/{z}")
+
+        # 2. Поворот
+        if abs(self.rotate) > 0.01:
+            angle_rad = self.rotate * (3.14159 / 180)
+            filters.append(f"rotate={angle_rad:.4f}")
+
+        # 3. Скорость (Video)
+        if abs(self.speed - 1.0) > 0.001:
+            filters.append(f"setpts={1/self.speed:.4f}*PTS")
+
+        # 4. Яркость/Контраст
         if abs(self.brightness.value) > 0.001 or abs(self.contrast.value - 1.0) > 0.001:
-            eq_filter = f"eq=brightness={self.brightness.value:.3f}:contrast={self.contrast.value:.3f}"
-            filters.append(eq_filter)
-        
-        # Резкость
-        if abs(self.sharpness.value) > 0.001:
-            unsharp_filter = f"unsharp=5:5:{self.sharpness.value:.3f}"
-            filters.append(unsharp_filter)
-        
-        # Шум
+            filters.append(f"eq=brightness={self.brightness.value:.3f}:contrast={self.contrast.value:.3f}")
+
+        # 5. Резкость
+        if self.sharpness.value > 0:
+            filters.append(f"unsharp=5:5:{self.sharpness.value:.3f}")
+
+        # 6. Шум
         if self.noise.value > 0:
-            noise_filter = f"noise=alls={int(self.noise.value)}:allf=t+u"
-            filters.append(noise_filter)
-        
-        # Сетка (ИСПРАВЛЕННЫЙ БЛОК)
+            filters.append(f"noise=alls={int(self.noise.value)}:allf=t+u")
+
+        # 7. Сетка
         if self.grid_enabled:
-            # Важно: FFmpeg ожидает прозрачность как 0.15, а не шестнадцатеричное число
-            # Синтаксис: c=color@0.15
-            grid_filter = f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{self.grid_opacity:.2f}"
-            filters.append(grid_filter)
-        
+            filters.append(f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{self.grid_opacity:.2f}")
+            
         return filters
 
 

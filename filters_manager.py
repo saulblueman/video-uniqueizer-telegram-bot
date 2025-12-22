@@ -155,38 +155,32 @@ class VideoFilters:
         filters.grid_height = data.get('grid_height', 46)
         return filters
     
-    def build_ffmpeg_filter(self):
+   def build_ffmpeg_filter(self):
         """
         Построить строку фильтра для FFmpeg.
-        Возвращает список отдельных фильтров, которые нужно объединить через запятую.
         """
         filters = []
         
-        # Яркость и контраст (eq фильтр)
-        # Применяем только если есть отклонение от дефолтных значений
+        # Яркость и контраст
         if abs(self.brightness.value) > 0.001 or abs(self.contrast.value - 1.0) > 0.001:
             eq_filter = f"eq=brightness={self.brightness.value:.3f}:contrast={self.contrast.value:.3f}"
             filters.append(eq_filter)
         
-        # Резкость (unsharp)
+        # Резкость
         if abs(self.sharpness.value) > 0.001:
-            # unsharp=luma_msize_x:luma_msize_y:luma_amount
-            # Используем матрицу 5x5 и amount из значения резкости
             unsharp_filter = f"unsharp=5:5:{self.sharpness.value:.3f}"
             filters.append(unsharp_filter)
         
-        # Шум (noise)
+        # Шум
         if self.noise.value > 0:
-            # noise=alls=strength:allf=t+u (temporal + uniform)
             noise_filter = f"noise=alls={int(self.noise.value)}:allf=t+u"
             filters.append(noise_filter)
         
-        # Сетка (drawgrid)
+        # Сетка (ИСПРАВЛЕННЫЙ БЛОК)
         if self.grid_enabled:
-            # drawgrid=w=width:h=height:t=thickness:c=color@opacity
-            # Конвертируем opacity из float (0.15) в hex (0.15 * 255 = ~38 = 0x26)
-            opacity_hex = format(int(self.grid_opacity * 255), '02x')
-            grid_filter = f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{opacity_hex}"
+            # Важно: FFmpeg ожидает прозрачность как 0.15, а не шестнадцатеричное число
+            # Синтаксис: c=color@0.15
+            grid_filter = f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{self.grid_opacity:.2f}"
             filters.append(grid_filter)
         
         return filters

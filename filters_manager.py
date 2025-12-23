@@ -28,87 +28,54 @@ class VideoFilters:
     """Класс для управления всеми фильтрами видео"""
     
     def __init__(self):
-        # Яркость: диапазон -1.0 до 1.0 (FFmpeg eq=brightness)
+        # Стандартные фильтры
         self.brightness = FilterValue(0.0, -1.0, 1.0)
-        
-        # Контраст: диапазон 0.1 до 3.0 (FFmpeg eq=contrast)
         self.contrast = FilterValue(1.0, 0.1, 3.0)
-        
-        # Резкость: диапазон 0.0 до 2.0 (FFmpeg unsharp amount)
         self.sharpness = FilterValue(0.0, 0.0, 2.0)
-        
-        # Шум: диапазон 0 до 30 (FFmpeg noise)
         self.noise = FilterValue(0, 0, 30)
         
         # Сетка
         self.grid_enabled = False
-        self.grid_color = "#030303"  # По умолчанию темный цвет
-        self.grid_opacity = 0.15     # 15% прозрачности
-        self.grid_width = 21         # Ширина ячейки
-        self.grid_height = 46        # Высота ячейки
-               self.zoom = 0.0      # % зума (0-10)
+        self.grid_color = "#030303"
+        self.grid_opacity = 0.15
+        self.grid_width = 21
+        self.grid_height = 46
+
+        # Продвинутая уникализация
+        self.zoom = 0.0      # % зума (0-10)
         self.rotate = 0.0    # градусы (-5 до 5)
         self.speed = 1.0     # коэффициент скорости (0.9 до 1.1)
-
-       def reset_all(self):
-        # ... (сброс старых) ...
-        self.zoom = 0.0
-        self.rotate = 0.0
-        self.speed = 1.0
     
     def adjust_brightness(self, percent):
-        """
-        Изменить яркость на процент.
-        percent: +10 означает +10%, -5 означает -5%
-        Внутри хранится как float: +10% => +0.1
-        """
         delta = percent / 100.0
         return self.brightness.adjust(delta)
     
     def adjust_contrast(self, percent):
-        """
-        Изменить контраст на процент.
-        percent: +10 означает увеличить на 10%
-        Внутри: 1.0 + (percent / 100) => +10% => 1.1
-        """
         delta = percent / 100.0
         return self.contrast.adjust(delta)
     
     def adjust_sharpness(self, percent):
-        """
-        Изменить резкость на процент.
-        percent преобразуется в amount для unsharp
-        """
         delta = percent / 100.0
         return self.sharpness.adjust(delta)
     
     def adjust_noise(self, percent):
-        """
-        Изменить уровень шума на процент.
-        percent напрямую используется как значение
-        """
         return self.noise.adjust(percent)
     
     def toggle_grid(self):
-        """Включить/выключить сетку"""
         self.grid_enabled = not self.grid_enabled
         return self.grid_enabled
     
     def set_grid_color(self, color):
-        """Установить цвет сетки"""
         self.grid_color = color
     
     def set_grid_opacity(self, opacity):
-        """Установить прозрачность сетки (0.01 - 0.5)"""
         self.grid_opacity = max(0.01, min(0.5, opacity))
     
     def set_grid_size(self, width, height):
-        """Установить размер ячеек сетки"""
         self.grid_width = width
         self.grid_height = height
     
     def reset_all(self):
-        """Сброс всех настроек к значениям по умолчанию"""
         self.brightness.reset()
         self.contrast.value = 1.0
         self.sharpness.reset()
@@ -118,25 +85,24 @@ class VideoFilters:
         self.grid_opacity = 0.15
         self.grid_width = 21
         self.grid_height = 46
+        self.zoom = 0.0
+        self.rotate = 0.0
+        self.speed = 1.0
     
     def get_brightness_percent(self):
-        """Получить яркость в процентах"""
         return round(self.brightness.value * 100, 1)
     
     def get_contrast_percent(self):
-        """Получить контраст в процентах относительно 1.0"""
         return round((self.contrast.value - 1.0) * 100, 1)
     
     def get_sharpness_percent(self):
-        """Получить резкость в процентах"""
         return round(self.sharpness.value * 100, 1)
     
     def get_noise_percent(self):
-        """Получить шум в процентах"""
         return int(self.noise.value)
     
-  def to_dict(self):
-        d = {
+    def to_dict(self):
+        return {
             'brightness': self.brightness.value,
             'contrast': self.contrast.value,
             'sharpness': self.sharpness.value,
@@ -146,36 +112,38 @@ class VideoFilters:
             'grid_opacity': self.grid_opacity,
             'grid_width': self.grid_width,
             'grid_height': self.grid_height,
-            # Новое
             'zoom': self.zoom,
             'rotate': self.rotate,
             'speed': self.speed
         }
-        return d
     
-      @classmethod
+    @classmethod
     def from_dict(cls, data):
-        f = cls()
-        f.brightness.value = data.get('brightness', 0.0)
-        f.contrast.value = data.get('contrast', 1.0)
-        f.sharpness.value = data.get('sharpness', 0.0)
-        f.noise.value = data.get('noise', 0)
-        f.grid_enabled = data.get('grid_enabled', False)
-        # ... остальные старые ...
-        f.zoom = data.get('zoom', 0.0)
-        f.rotate = data.get('rotate', 0.0)
-        f.speed = data.get('speed', 1.0)
-        return f
-
-   def build_ffmpeg_filter(self):
+        filters = cls()
+        filters.brightness.value = data.get('brightness', 0.0)
+        filters.contrast.value = data.get('contrast', 1.0)
+        filters.sharpness.value = data.get('sharpness', 0.0)
+        filters.noise.value = data.get('noise', 0)
+        filters.grid_enabled = data.get('grid_enabled', False)
+        filters.grid_color = data.get('grid_color', '#030303')
+        filters.grid_opacity = data.get('grid_opacity', 0.15)
+        filters.grid_width = data.get('grid_width', 21)
+        filters.grid_height = data.get('grid_height', 46)
+        filters.zoom = data.get('zoom', 0.0)
+        filters.rotate = data.get('rotate', 0.0)
+        filters.speed = data.get('speed', 1.0)
+        return filters
+    
+    def build_ffmpeg_filter(self):
+        """Построить строку фильтра для FFmpeg"""
         filters = []
         
-        # 1. Зум (Scale + Crop)
+        # 1. Зум (Scale + Crop) - должен быть первым
         if self.zoom > 0:
             z = 1 + (self.zoom / 100)
             filters.append(f"scale=iw*{z}:-1,crop=iw/{z}:ih/{z}")
 
-        # 2. Поворот (с обрезкой, чтобы не было черных углов)
+        # 2. Поворот (с билинейной фильтрацией для плавности)
         if abs(self.rotate) > 0.01:
             angle_rad = self.rotate * (3.14159 / 180)
             filters.append(f"rotate={angle_rad:.4f}:bilinear=0")
@@ -200,13 +168,13 @@ class VideoFilters:
         if self.grid_enabled:
             filters.append(f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{self.grid_opacity:.2f}")
         
-        # КРИТИЧЕСКИЙ ФИКС: Принудительный формат для плавности воспроизведения
+        # 8. Фикс совместимости (всегда последний)
         filters.append("format=yuv420p")
         
         return filters
 
 
-# Пресеты для удобства пользователя
+# Пресеты
 GRID_COLOR_PRESETS = {
     '⚫ Темный': '#030303',
     '⚪ Белый': '#ffffff',

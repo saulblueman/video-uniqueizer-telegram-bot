@@ -167,39 +167,42 @@ class VideoFilters:
         f.speed = data.get('speed', 1.0)
         return f
 
-    def build_ffmpeg_filter(self):
+   def build_ffmpeg_filter(self):
         filters = []
         
-        # 1. Зум (Scale + Crop) - применяется первым
+        # 1. Зум (Scale + Crop)
         if self.zoom > 0:
             z = 1 + (self.zoom / 100)
             filters.append(f"scale=iw*{z}:-1,crop=iw/{z}:ih/{z}")
 
-        # 2. Поворот
+        # 2. Поворот (с обрезкой, чтобы не было черных углов)
         if abs(self.rotate) > 0.01:
             angle_rad = self.rotate * (3.14159 / 180)
-            filters.append(f"rotate={angle_rad:.4f}")
+            filters.append(f"rotate={angle_rad:.4f}:bilinear=0")
 
-        # 3. Скорость (Video)
+        # 3. Скорость (Video PTS)
         if abs(self.speed - 1.0) > 0.001:
             filters.append(f"setpts={1/self.speed:.4f}*PTS")
 
-        # 4. Яркость/Контраст
+        # 4. Яркость и контраст
         if abs(self.brightness.value) > 0.001 or abs(self.contrast.value - 1.0) > 0.001:
             filters.append(f"eq=brightness={self.brightness.value:.3f}:contrast={self.contrast.value:.3f}")
-
+        
         # 5. Резкость
-        if self.sharpness.value > 0:
+        if abs(self.sharpness.value) > 0.001:
             filters.append(f"unsharp=5:5:{self.sharpness.value:.3f}")
-
+        
         # 6. Шум
         if self.noise.value > 0:
             filters.append(f"noise=alls={int(self.noise.value)}:allf=t+u")
-
+        
         # 7. Сетка
         if self.grid_enabled:
             filters.append(f"drawgrid=w={self.grid_width}:h={self.grid_height}:t=1:c={self.grid_color}@{self.grid_opacity:.2f}")
-            
+        
+        # КРИТИЧЕСКИЙ ФИКС: Принудительный формат для плавности воспроизведения
+        filters.append("format=yuv420p")
+        
         return filters
 
 

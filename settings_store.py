@@ -1,87 +1,34 @@
-"""
-Хранилище пользовательских настроек фильтров
-Поддерживает два режима: in-memory и JSON
-"""
-
 import json
 import os
-from filters_manager import VideoFilters
-
 
 class SettingsStore:
-    """Хранилище настроек пользователей"""
-    
-    def __init__(self, storage_type='json', json_file='user_settings.json'):
-        """
-        storage_type: 'memory' или 'json'
-        json_file: путь к JSON файлу для хранения
-        """
-        self.storage_type = storage_type
-        self.json_file = json_file
-        self.memory_storage = {}  # Для in-memory режима
-        
-        # Если JSON режим, загрузить данные из файла
-        if self.storage_type == 'json':
-            self._load_from_json()
-    
-    def _load_from_json(self):
-        """Загрузить данные из JSON файла"""
-        if os.path.exists(self.json_file):
-            try:
-                with open(self.json_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    # Конвертируем в VideoFilters объекты
-                    for user_id, settings_dict in data.items():
-                        self.memory_storage[int(user_id)] = VideoFilters.from_dict(settings_dict)
-            except Exception as e:
-                print(f"Ошибка загрузки настроек из JSON: {e}")
-                self.memory_storage = {}
-    
-    def _save_to_json(self):
-        """Сохранить данные в JSON файл"""
-        if self.storage_type == 'json':
-            try:
-                # Конвертируем VideoFilters объекты в словари
-                data = {
-                    str(user_id): filters.to_dict()
-                    for user_id, filters in self.memory_storage.items()
-                }
-                with open(self.json_file, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, indent=2, ensure_ascii=False)
-            except Exception as e:
-                print(f"Ошибка сохранения настроек в JSON: {e}")
-    
-    def get_filters(self, user_id):
-        """
-        Получить фильтры для пользователя.
-        Если не существуют — создать новые с дефолтными значениями.
-        """
-        if user_id not in self.memory_storage:
-            self.memory_storage[user_id] = VideoFilters()
-            if self.storage_type == 'json':
-                self._save_to_json()
-        return self.memory_storage[user_id]
-    
-    def save_filters(self, user_id, filters):
-        """Сохранить фильтры пользователя"""
-        self.memory_storage[user_id] = filters
-        if self.storage_type == 'json':
-            self._save_to_json()
-    
-    def reset_filters(self, user_id):
-        """Сбросить фильтры пользователя к дефолтным"""
-        self.memory_storage[user_id] = VideoFilters()
-        if self.storage_type == 'json':
-            self._save_to_json()
-    
-    def delete_user(self, user_id):
-        """Удалить настройки пользователя"""
-        if user_id in self.memory_storage:
-            del self.memory_storage[user_id]
-            if self.storage_type == 'json':
-                self._save_to_json()
+    def __init__(self, file_path='settings.json'):
+        self.file_path = file_path
+        self.data = self._load()
 
+    def _load(self):
+        if os.path.exists(self.file_path):
+            try:
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except: return {}
+        return {}
 
-# Глобальный экземпляр хранилища
-# По умолчанию используем JSON для persistence между перезапусками
-settings_store = SettingsStore(storage_type='json')
+    def get_user_settings(self, user_id):
+        uid = str(user_id)
+        if uid not in self.data:
+            self.data[uid] = {
+                'filters': {'brightness': 0.05, 'contrast': 0.0, 'saturation': 0.0, 'zoom': 0.0, 'speed': 0.0},
+                'copies_count': 1, 'batch_size': 1, 'current_batch_count': 0
+            }
+        return self.data[uid]
+
+    def save_user_settings(self, user_id, settings):
+        self.data[str(user_id)] = settings
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(self.data, f, indent=4, ensure_ascii=False)
+
+    def update_filter(self, user_id, param, value):
+        settings = self.get_user_settings(user_id)
+        settings['filters'][param] = value
+        self.save_user_settings(user_id, settings)

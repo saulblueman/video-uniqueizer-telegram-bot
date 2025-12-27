@@ -1,4 +1,3 @@
-# Используем официальный образ Python
 FROM python:3.10-slim
 
 # Устанавливаем ffmpeg и системные зависимости
@@ -7,15 +6,16 @@ RUN apt-get update && apt-get install -y \
     libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем файл зависимостей и устанавливаем их
+# Копируем requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем остальные файлы проекта
+# Устанавливаем зависимости из файла + принудительно python-dotenv
+RUN pip install --no-cache-dir -r requirements.txt python-dotenv
+
+# Копируем остальной код
 COPY . .
 
-# Команда для запуска бота (согласно Procfile в репозитории)
+# Запуск бота
 CMD ["python", "bot.py"]

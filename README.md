@@ -1,111 +1,110 @@
-
 # 🚀 Video Uniqueizer Bot (Ultimate Advanced Version)
 
-Инструкция предназначена для систем на базе **Linux (Ubuntu/Debian)**. Бот построен на базе библиотеки **Telethon** и использует всю мощь **FFmpeg** для глубокой переработки видеопотока.
+This manual is intended for **Linux (Ubuntu/Debian)** based systems. The bot is built using the **Telethon** library and utilizes the full power of **FFmpeg** for deep video stream reprocessing.
 
-## 🌟 Полный функционал Advanced версии
+## 🌟 Advanced Version Full Functionality
 
-В отличие от стандартных скриптов, этот бот реализует многоуровневую систему уникализации, управляемую через динамические настройки (модуль `settings_store.py`).
+Unlike standard scripts, this bot implements a multi-level uniqueization system managed through dynamic settings (the `settings_store.py` module).
 
-### 1. Визуальные трансформации (Video Filters)
+### 1. Visual Transformations (Video Filters)
 
-* **🪞 Mirroring (Отзеркаливание):** Горизонтальный флип видео.
-* **📐 Rotate (Поворот):** Микро-поворот на произвольный градус для изменения геометрии кадра.
-* **🔍 Zoom/Crop (Масштабирование):** Умная обрезка краев видео (от 1% до 10%), удаляющая технические метки и вотермарки по краям.
-* **🎬 Изменение FPS:** Пересчет количества кадров в секунду, что полностью меняет временную структуру файла.
+* **🪞 Mirroring:** Horizontal video flip.
+* **📐 Rotate:** Micro-rotation by an arbitrary degree to change the frame geometry.
+* **🔍 Zoom/Crop:** Smart edge cropping (from 1% to 10%) that removes technical tags and watermarks from the edges.
+* **🎬 FPS Change:** Recalculating the number of frames per second, which completely alters the file's temporal structure.
 
-### 2. Глубокая цветокоррекция и эффекты
+### 2. Deep Color Correction and Effects
 
-* **🎨 Color Tuning:** Настройка яркости (brightness), контрастности (contrast) и насыщенности (saturation).
-* **✨ Sharpness (Резкость):** Улучшение детализации или легкое размытие для изменения хэша.
-* **🧂 Noise (Шум):** Добавление едва заметной зернистости, которая делает каждый кадр уникальным для нейросетей.
-* **🏁 Drawgrid (Сетка):** Наложение тонкой, едва заметной сетки поверх видео с настройкой прозрачности.
+* **🎨 Color Tuning:** Adjusting brightness, contrast, and saturation.
+* **✨ Sharpness:** Enhancing detail or applying a slight blur to change the hash.
+* **🧂 Noise:** Adding barely noticeable grain, making every frame unique for neural networks.
+* **🏁 Drawgrid:** Overlaying a thin, subtle grid over the video with adjustable transparency.
 
-### 3. Аудио-уникализация
+### 3. Audio Uniqueization
 
-* **🎵 Audio Pitch/Speed:** Изменение тональности и скорости аудиопотока. Это позволяет обходить детекцию по "аудио-отпечатку" (Audio Fingerprint), сохраняя при этом разборчивость речи.
-* **🔇 Audio Removal:** Опция полного удаления звуковой дорожки.
+* **🎵 Audio Pitch/Speed:** Changing the tone and speed of the audio stream. This allows bypassing "Audio Fingerprint" detection while maintaining speech intelligibility.
+* **🔇 Audio Removal:** Option for complete removal of the audio track.
 
-### 4. Технические параметры и защита
+### 4. Technical Parameters and Protection
 
-* **📉 Изменение битрейта:** Пересборка видео с использованием **CRF (Constant Rate Factor)**. Позволяет изменить вес файла и его внутреннюю структуру без видимой потери качества.
-* **🖼 Overlay (Наложение):** Автоматическое наложение водяного знака или изображения (по умолчанию `best_offer.png`).
-* **🧹 Metadata Cleaning:** Автоматическое удаление всех метаданных (EXIF, GPS, данные об устройстве и софте).
-* **💾 User Persistence:** Все индивидуальные предпочтения пользователя сохраняются в `user_settings.json` и не сбрасываются после перезапуска бота.
+* **📉 Bitrate Modification:** Reassembling the video using **CRF (Constant Rate Factor)**. This allows changing the file weight and internal structure without visible quality loss.
+* **🖼 Overlay:** Automatic overlay of a watermark or image (defaults to `best_offer.png`).
+* **🧹 Metadata Cleaning:** Automatic removal of all metadata (EXIF, GPS, device, and software data).
+* **💾 User Persistence:** All individual user preferences are saved in `user_settings.json` and are not reset after a bot restart.
 
 ---
 
-## 🛠 Установка на Linux (Ubuntu/Debian)
+## 🛠 Installation on Linux (Ubuntu/Debian)
 
-### 1. Предварительные требования
+### 1. Prerequisites
 
-Убедитесь, что в системе установлен FFmpeg и компоненты Python:
+Ensure FFmpeg and Python components are installed on your system:
 
 ```bash
 sudo apt update && sudo apt install ffmpeg python3-pip python3-venv -y
 
 ```
 
-### 2. Шаги по установке
+### 2. Installation Steps
 
 ```bash
-# Клонируйте репозиторий
+# Clone the repository
 git clone https://github.com/saulblueman/video-uniqueizer-telegram-bot.git
 cd video-uniqueizer-telegram-bot
 
-# Создайте и активируйте виртуальное окружение
+# Create and activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Установите зависимости
+# Install dependencies
 pip install -r requirements.txt
 
 ```
 
-### 3. Настройка окружения
+### 3. Environment Configuration
 
-Создайте файл `.env` в корне проекта:
+Create a `.env` file in the project root:
 
 ```bash
 nano .env
 
 ```
 
-Вставьте ваши данные (получить на [my.telegram.org](https://my.telegram.org)):
+Insert your credentials (obtainable at [my.telegram.org](https://my.telegram.org)):
 
 ```env
 API_ID=12345678
-API_HASH=ваш_api_hash
-BOT_TOKEN=ваш_токен_бота
+API_HASH=your_api_hash
+BOT_TOKEN=your_bot_token
 
 ```
 
-### 4. Подготовка ресурсов
+### 4. Asset Preparation
 
-1. **Логотип:** Положите файл `best_offer.png` в корень папки для функции наложения (Overlay).
-2. **Хранилище:** Файл `user_settings.json` будет создан автоматически. В нем `settings_store.py` хранит состояния (вкл/выкл) и значения фильтров для каждого Telegram-ID.
+1. **Logo:** Place the `best_offer.png` file in the root folder for the Overlay function.
+2. **Storage:** The `user_settings.json` file will be created automatically. The `settings_store.py` module uses it to store states (on/off) and filter values for each Telegram ID.
 
-### 5. Запуск
+### 5. Launch
 
 ```bash
 python3 bot.py
 
 ```
 
-## 📂 Структура настроек (settings_store.py)
+## 📂 Settings Structure (settings_store.py)
 
-Бот поддерживает сохранение следующих параметров для каждого пользователя:
+The bot supports saving the following parameters for each user:
 
-* `is_mirror`: включение отзеркаливания.
-* `is_blur`: режим размытия.
-* `is_noise`: наложение шума.
-* `is_rotate`: микро-поворот.
-* `is_zoom`: зумирование кадра.
-* `is_speed`: изменение скорости (1.01x - 1.1x).
-* `is_bitrate`: управление качеством/битрейтом.
-* `is_metadata`: очистка метаданных.
-* `is_logo`: наложение картинки.
+* `is_mirror`: enables mirroring.
+* `is_blur`: blur mode.
+* `is_noise`: noise overlay.
+* `is_rotate`: micro-rotation.
+* `is_zoom`: frame zooming.
+* `is_speed`: speed modification (1.01x - 1.1x).
+* `is_bitrate`: quality/bitrate management.
+* `is_metadata`: metadata cleaning.
+* `is_logo`: image overlay.
 
 ---
 
-*Примечание: Данный инструмент предназначен для автоматизации рутинных процессов обработки видео. Используйте его в соответствии с правилами площадок.*
+*Note: This tool is designed to automate routine video processing tasks. Please use it in accordance with platform policies.*
